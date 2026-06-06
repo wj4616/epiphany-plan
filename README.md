@@ -6,7 +6,7 @@
 `plan_document` — a coverage-audited, structurally-verified, dependency-classified step DAG that
 [epiphany-executor](#10-integration) runs step by step.
 
-**Version.** Skill `1.1.0` (`graph.json:5`, `manifest.json`). Plan-document schema id
+**Version.** Skill `1.1.1` (`graph.json:5`, `manifest.json`). Plan-document schema id
 `epiphany-plan.plan_document.v1` (`plan.schema.json` title/`plan_meta.schema`). Graph IR
 `epiphany-harness.ir.v1` (`graph.json:2`).
 
@@ -537,7 +537,7 @@ Every load-bearing claim → its source.
 
 | claim | source |
 |---|---|
-| Skill version 1.1.0 | `graph.json:5`; `manifest.json` |
+| Skill version 1.1.1 | `graph.json:5`; `manifest.json` |
 | Plan-document schema id `epiphany-plan.plan_document.v1` | `plan.schema.json` title; `N-emit.md:97` |
 | Graph IR `epiphany-harness.ir.v1` | `graph.json:2` |
 | 10 nodes, 12 edges | `graph.json:7-415` (nodes), `graph.json:416-549` (edges); `SKILL.md:29` |

@@ -1,6 +1,6 @@
 {
   "skill_name": "epiphany-plan",
-  "skill_version": "1.1.0",
+  "skill_version": "1.1.1",
   "schema_version": "epiphany-harness.ir.v1",
   "files": [
     "SKILL.md",

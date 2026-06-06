@@ -10,7 +10,7 @@ Machine-facing operating guide for agents driving this skill. Read alongside [`S
 ## 1. TL;DR for agents
 
 `epiphany-plan` is a 10-node native goatcs-harness graph (`graph.json`, IR
-`epiphany-harness.ir.v1`, skill v1.1.0). You drive it on the harness. It turns a spec/brief into one
+`epiphany-harness.ir.v1`, skill v1.1.1). You drive it on the harness. It turns a spec/brief into one
 `plan_document` (Markdown default, or JSON validating `plan.schema.json`). Chain:
 
 ```
