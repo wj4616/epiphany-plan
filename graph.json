@@ -1,0 +1,553 @@
+{
+  "schema_version": "epiphany-harness.ir.v1",
+  "dialect": "native",
+  "skill_name": "epiphany-plan",
+  "skill_version": "1.1.0",
+  "determinism_class": "non-deterministic",
+  "nodes": {
+    "read_spec": {
+      "id": "read_spec",
+      "name": "read_spec",
+      "type": "io",
+      "tier": "no-llm",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "spec_path",
+          "required": false,
+          "signal_field": "spec_path"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "spec_text",
+          "signal_field": "spec_text"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-read_spec.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": "",
+      "tool_call": {
+        "tool": "fs.read_text",
+        "args": {
+          "path": "spec_path"
+        },
+        "outputs": {
+          "spec_text": "content"
+        }
+      }
+    },
+    "ingest": {
+      "id": "ingest",
+      "name": "ingest",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "spec_text",
+          "signal_field": "spec_text"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "requirements",
+          "signal_field": "requirements"
+        },
+        {
+          "name": "constraints",
+          "signal_field": "constraints"
+        },
+        {
+          "name": "sections",
+          "signal_field": "sections"
+        },
+        {
+          "name": "target_profile",
+          "signal_field": "target_profile"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-ingest.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "decompose": {
+      "id": "decompose",
+      "name": "decompose",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "requirements",
+          "signal_field": "requirements"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "step_nodes",
+          "signal_field": "step_nodes"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-decompose.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "author_steps": {
+      "id": "author_steps",
+      "name": "author_steps",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "step_nodes",
+          "signal_field": "step_nodes"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "authored_steps",
+          "signal_field": "authored_steps"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-author_steps.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "map_dependencies": {
+      "id": "map_dependencies",
+      "name": "map_dependencies",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "step_nodes",
+          "signal_field": "step_nodes"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "dependency_map",
+          "signal_field": "dependency_map"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-map_dependencies.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "integrate": {
+      "id": "integrate",
+      "name": "integrate",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "authored_steps",
+          "signal_field": "authored_steps"
+        },
+        {
+          "name": "dependency_map",
+          "signal_field": "dependency_map"
+        },
+        {
+          "name": "coverage_verdict",
+          "signal_field": "coverage_verdict",
+          "required": false
+        },
+        {
+          "name": "structural_verdict",
+          "required": false,
+          "signal_field": "structural_verdict"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "integrated_plan",
+          "signal_field": "integrated_plan"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-integrate.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": "AND",
+      "aggregation_policy": "concat",
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "coverage_audit": {
+      "id": "coverage_audit",
+      "name": "coverage_audit",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "requirements",
+          "signal_field": "requirements"
+        },
+        {
+          "name": "integrated_plan",
+          "signal_field": "integrated_plan"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "coverage_verdict",
+          "signal_field": "coverage_verdict"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-coverage_audit.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "emit": {
+      "id": "emit",
+      "name": "emit",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "integrated_plan",
+          "signal_field": "integrated_plan"
+        },
+        {
+          "name": "coverage_verdict",
+          "signal_field": "coverage_verdict"
+        },
+        {
+          "name": "output_format",
+          "required": false,
+          "signal_field": "output_format"
+        },
+        {
+          "name": "target_profile",
+          "required": false,
+          "signal_field": "target_profile"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "plan_document",
+          "signal_field": "plan_document"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-emit.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "plan_verify": {
+      "id": "plan_verify",
+      "name": "plan_verify",
+      "type": "llm",
+      "tier": "model-medium",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "plan_document",
+          "signal_field": "plan_document"
+        },
+        {
+          "name": "integrated_plan",
+          "signal_field": "integrated_plan"
+        },
+        {
+          "name": "requirements",
+          "signal_field": "requirements"
+        },
+        {
+          "name": "output_format",
+          "required": false,
+          "signal_field": "output_format"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "structural_verdict",
+          "signal_field": "structural_verdict"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-plan_verify.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": ""
+    },
+    "write_plan": {
+      "id": "write_plan",
+      "name": "write_plan",
+      "type": "io",
+      "tier": "no-llm",
+      "exec_type": "inline",
+      "hat": "",
+      "inputs": [
+        {
+          "name": "plan_document",
+          "signal_field": "plan_document"
+        },
+        {
+          "name": "out_path",
+          "required": false,
+          "signal_field": "out_path"
+        },
+        {
+          "name": "output_format",
+          "required": false,
+          "signal_field": "output_format"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "written_path",
+          "signal_field": "written_path"
+        }
+      ],
+      "raises_signals": [],
+      "module_file": "modules/N-write_plan.md",
+      "ensemble": null,
+      "hitl": false,
+      "scale_gates": {},
+      "join_policy": null,
+      "aggregation_policy": null,
+      "required_output_sections": [],
+      "conditional": false,
+      "wave": null,
+      "downshiftable": false,
+      "rationale": "",
+      "tool_call": {
+        "tool": "fs.write_text",
+        "args": {
+          "path": "out_path",
+          "content": "plan_document"
+        },
+        "outputs": {
+          "written_path": "written_path"
+        }
+      }
+    }
+  },
+  "edges": [
+    {
+      "id": "E01",
+      "src": "read_spec",
+      "dst": "ingest",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": null
+    },
+    {
+      "id": "E02",
+      "src": "ingest",
+      "dst": "decompose",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": null
+    },
+    {
+      "id": "E03",
+      "src": "decompose",
+      "dst": "author_steps",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": "decompose"
+    },
+    {
+      "id": "E04",
+      "src": "decompose",
+      "dst": "map_dependencies",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": "decompose"
+    },
+    {
+      "id": "E05",
+      "src": "author_steps",
+      "dst": "integrate",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": "decompose",
+      "split_from": null
+    },
+    {
+      "id": "E06",
+      "src": "map_dependencies",
+      "dst": "integrate",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": "decompose",
+      "split_from": null
+    },
+    {
+      "id": "E07",
+      "src": "integrate",
+      "dst": "coverage_audit",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": null
+    },
+    {
+      "id": "E08",
+      "src": "coverage_audit",
+      "dst": "integrate",
+      "kind": "back-edge",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": 1,
+      "and_join_group": null,
+      "split_from": null
+    },
+    {
+      "id": "E09",
+      "src": "coverage_audit",
+      "dst": "emit",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": null
+    },
+    {
+      "id": "E10",
+      "src": "emit",
+      "dst": "plan_verify",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": null
+    },
+    {
+      "id": "E11",
+      "src": "plan_verify",
+      "dst": "write_plan",
+      "kind": "required",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": null,
+      "and_join_group": null,
+      "split_from": null
+    },
+    {
+      "id": "E12",
+      "src": "plan_verify",
+      "dst": "integrate",
+      "kind": "back-edge",
+      "signal_field": null,
+      "gate_condition": null,
+      "retry_cap": 1,
+      "and_join_group": null,
+      "split_from": null
+    }
+  ],
+  "entrypoints": [
+    "read_spec"
+  ]
+}

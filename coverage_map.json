@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "skill_name": "epiphany-plan",
+  "nodes": {
+    "read_spec": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "ingest": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "decompose": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "author_steps": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "map_dependencies": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "integrate": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "coverage_audit": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "emit": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "plan_verify": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    },
+    "write_plan": {
+      "covered_by": [
+        "verify:structural",
+        "fidelity:contract"
+      ],
+      "covered": true
+    }
+  },
+  "orphans": []
+}

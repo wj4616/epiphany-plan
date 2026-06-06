@@ -1,0 +1,25 @@
+{
+  "skill_name": "epiphany-plan",
+  "skill_version": "1.1.0",
+  "schema_version": "epiphany-harness.ir.v1",
+  "files": [
+    "SKILL.md",
+    "bootstrap.py",
+    "graph.json",
+    "graph.schema.json",
+    "install.sh",
+    "plan.schema.json",
+    "manifest.json",
+    "modules/N-author_steps.md",
+    "modules/N-coverage_audit.md",
+    "modules/N-decompose.md",
+    "modules/N-emit.md",
+    "modules/N-ingest.md",
+    "modules/N-integrate.md",
+    "modules/N-map_dependencies.md",
+    "modules/N-plan_verify.md",
+    "modules/N-read_spec.md",
+    "modules/N-write_plan.md"
+  ],
+  "produced_by": "goatcs-harness-generator"
+}

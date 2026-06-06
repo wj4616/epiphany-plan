@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "brief_sha": "ffb2bb8f7e2555c41a2da620d393b4f012efafd4df4112881dc013ecdacdecc7",
+  "forge_version": "0.2.0",
+  "design_sha": "6c7b8332720901f7285e4827d2636b8274f599e0db6a0defaeb91a540345ecad",
+  "skill_name": "epiphany-plan",
+  "family": null,
+  "verdict": "UNCERTAIN",
+  "topology_class": "GoT-full",
+  "selection_trace": {
+    "n_candidates": 1,
+    "profile": "power",
+    "gate": "none",
+    "mode": "optimize"
+  },
+  "runtime_requirements": {
+    "determinism": "non-deterministic",
+    "needs_provider": true,
+    "tiers": [
+      "model-medium",
+      "no-llm"
+    ],
+    "hitl_nodes": [],
+    "network": false,
+    "seam_required_nodes": []
+  },
+  "providers": [
+    {
+      "name": "claude-cli",
+      "version": null,
+      "model": null
+    }
+  ],
+  "recorded_run_id": null,
+  "intent_aligned": true,
+  "per_node_economics": {
+    "read_spec": {
+      "role": "IO",
+      "tier": "no-llm",
+      "ensemble": false
+    },
+    "ingest": {
+      "role": "ANALYZER",
+      "tier": "model-medium",
+      "ensemble": false
+    },
+    "decompose": {
+      "role": "ANALYZER",
+      "tier": "model-medium",
+      "ensemble": false
+    },
+    "author_steps": {
+      "role": "ANALYZER",
+      "tier": "model-medium",
+      "ensemble": false
+    },
+    "map_dependencies": {
+      "role": "ANALYZER",
+      "tier": "model-medium",
+      "ensemble": false
+    },
+    "integrate": {
+      "role": "ANALYZER",
+      "tier": "model-medium",
+      "ensemble": false
+    },
+    "coverage_audit": {
+      "role": "ANALYZER",
+      "tier": "model-medium",
+      "ensemble": false
+    },
+    "emit": {
+      "role": "ANALYZER",
+      "tier": "model-medium",
+      "ensemble": false
+    },
+    "write_plan": {
+      "role": "IO",
+      "tier": "no-llm",
+      "ensemble": false
+    }
+  },
+  "red_blue_verdict": {
+    "serious_flaws": [],
+    "verdict": null,
+    "attacks": null
+  }
+}
