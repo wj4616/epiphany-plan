@@ -107,7 +107,7 @@
         "input_obligations": {
           "type": "array",
           "items": {"type": "string"},
-          "description": "list of input requirements that must be traced to steps"
+          "description": "the complete obligation set ingest extracted (requirement/constraint/section ids). emit SHOULD populate this; tools/plan_verify.py reads it to run the BLOCKING requirements->ledger closure check (8c) — i.e. every obligation must appear in requirement_ledger with a non-empty covered_by. Absent => 8c is advisory-only."
         }
       },
       "additionalProperties": true
@@ -289,7 +289,7 @@
           }
         }
       },
-      "description": "list of implementation steps comprising the plan"
+      "description": "list of implementation steps comprising the plan. NOTE: the schema is intentionally tolerant (traces_to / traces_requirements are not in `required` so legacy/partial plans validate), but per N-emit.md + the spec OUTPUT CONTRACT every step MUST carry at least one of traces_to / traces_requirements; tools/plan_verify.py enforces this in check 1 (a traceless step FAILs the gate even though it validates against this schema)."
     }
   }
 }

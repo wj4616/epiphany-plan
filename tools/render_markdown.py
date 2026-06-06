@@ -219,6 +219,34 @@ def render(doc) -> str:
         for o in _list(doc["out_of_scope"]):
             L.append(f"- {_inline(o)}")
         L.append("")
+
+    # requirement_preservation.input_obligations — the obligation set plan_verify's 8c closure reads;
+    # carry it through so the Markdown is round-trip-faithful with the canonical JSON.
+    rp = doc.get("requirement_preservation")
+    if isinstance(rp, dict) and rp.get("input_obligations"):
+        L.append("## Input Obligations")
+        L.append("> _(requirement_preservation.input_obligations — the obligation set the coverage closure check reads)_")
+        for o in _list(rp["input_obligations"]):
+            L.append(f"- {_inline(o)}")
+        L.append("")
+
+    # audit_log — the construction/convergence trail; render it so a defect-and-fix record is not
+    # dropped from the human-facing Markdown.
+    al = doc.get("audit_log")
+    if al:
+        L.append("## Audit Log")
+        for a in _list(al):
+            if isinstance(a, dict):
+                head = " ".join(b for b in (
+                    f"**{_inline(a.get('id','?'))}**",
+                    f"[{_inline(a.get('severity',''))}/{_inline(a.get('class',''))}]" if (a.get('severity') or a.get('class')) else "",
+                ) if b)
+                L.append(f"- {head} {_inline(a.get('finding',''))}".rstrip())
+                if a.get("fix"):
+                    L.append(f"  - fix: {_inline(a['fix'])}")
+            else:
+                L.append(f"- {_inline(a)}")
+        L.append("")
     return "\n".join(L)
 
 

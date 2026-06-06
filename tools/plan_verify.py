@@ -99,6 +99,9 @@ def load_json_plan(doc):
             cov = row.get("covered_by", [])
             cov = [c for c in cov if isinstance(c, str)] if isinstance(cov, list) else []
             ledger.append((str(row.get("obligation", "?")), cov))
+    rp = doc.get("requirement_preservation")
+    req_obl = rp.get("input_obligations") if isinstance(rp, dict) else None
+    req_obl = [str(o) for o in req_obl] if isinstance(req_obl, list) else None
     return {
         "steps": steps, "ids": ids,
         "deps": {s.get("step_id"): list(_dep_pairs(s)) for s in steps},
@@ -112,6 +115,8 @@ def load_json_plan(doc):
         "unparseable_deps": [],
         "type_faults": _type_faults(steps, doc),
         "no_steps_section": False,
+        "req_obligations": req_obl,
+        "target_profile": (doc.get("plan_meta") or {}).get("target_profile") if isinstance(doc.get("plan_meta"), dict) else None,
     }
 
 
@@ -140,7 +145,8 @@ def load_md_plan(text):
         # required anchor absent -> do not whole-doc-scan (phantom steps); FAIL loud.
         return {"steps": [], "ids": [], "deps": {}, "back_edges": {}, "order": [],
                 "roots": None, "leaves": None, "ledger": [], "coverage_pass": True,
-                "raw_blocks": {}, "unparseable_deps": [], "type_faults": [], "no_steps_section": True}
+                "raw_blocks": {}, "unparseable_deps": [], "type_faults": [], "no_steps_section": True,
+                "req_obligations": None, "target_profile": None}
     tail = text[sm.end():]
     endm = re.search(r"\n##\s+", tail)          # end ONLY at the next top-level section (NOT at ---)
     steps_region = tail[:endm.start()] if endm else tail
@@ -195,7 +201,7 @@ def load_md_plan(text):
         "steps": steps, "ids": steps, "deps": deps, "back_edges": back_edges, "order": order,
         "roots": roots, "leaves": leaves, "ledger": ledger, "coverage_pass": not cov_fail,
         "raw_blocks": raw_blocks, "unparseable_deps": unparseable, "type_faults": [],
-        "no_steps_section": no_steps,
+        "no_steps_section": no_steps, "req_obligations": None, "target_profile": None,
     }
 
 
@@ -244,6 +250,10 @@ def run_checks(P, fmt, schema=None, doc=None):
                     miss.append(f"{s.get('step_id','?')}:{f}")
                 elif v is None:
                     miss.append(f"{s.get('step_id','?')}:{f}")
+            # traceability is mandated by N-emit.md + the spec OUTPUT CONTRACT (every step carries
+            # traces_requirements / traces_to). The schema stays tolerant; the gate enforces it here.
+            if not (_nonempty(s.get("traces_requirements")) or _nonempty(s.get("traces_to"))):
+                miss.append(f"{s.get('step_id','?')}:traces_requirements")
         chk("1", "completeness", not miss, "missing/empty: " + ", ".join(miss[:12]))
     else:
         miss = []
@@ -258,6 +268,13 @@ def run_checks(P, fmt, schema=None, doc=None):
                 real = [ln for ln in items if "(none)" not in ln.lower() and "(missing" not in ln.lower()]
                 if not real:
                     miss.append(f"{sid}:{lbl}(empty)")
+            # traceability (either label) must be present and non-(none) — mandated by N-emit.md.
+            trsec = _label_section(block, "traces_requirements")
+            if trsec is None:
+                trsec = _label_section(block, "traces_to")
+            trval = (trsec or "").strip()
+            if not trval or trval.lower().startswith("(none)"):
+                miss.append(f"{sid}:traces_requirements(empty)")
         chk("1", "completeness", not miss, "missing/empty: " + ", ".join(miss[:12]))
 
     # 2 dependency-reference integrity (HARD)
@@ -278,9 +295,24 @@ def run_checks(P, fmt, schema=None, doc=None):
     be_bad, be_decor = [], []
     for sid, be in P["back_edges"].items():
         for entry in be:
-            if not isinstance(entry, str) or entry.strip().lower() in ("", "(none)", "none"):
+            if not isinstance(entry, str):
                 continue
-            toks = set(ID_TOKEN.findall(entry))
+            e = entry.strip()
+            if e.lower() in ("", "(none)", "none"):
+                continue
+            # 1) exact whole-entry id reference — the JSON case and renderer-MD case, where
+            #    refinement_back_edges entries are exact step_ids. (Was missed before: the
+            #    token-scan split `S-M0-2` into `M0`, so neither a valid ref nor a dangling
+            #    `S-M0-99` matched — defeating this BLOCKING check for hyphenated id schemes.)
+            if e in ids:
+                continue
+            # 2) whole entry has the signature of a real step id but resolves to none -> DANGLING
+            #    (e.g. ids look like `S-M#-#` and the entry is `S-M0-99`).
+            if _sig(e) in id_sigs:
+                be_bad.append(f"{sid} back-edge ->{e}")
+                continue
+            # 3) prose fallback: scan id-like tokens embedded in free text.
+            toks = set(ID_TOKEN.findall(e))
             present = [t for t in toks if t in ids]
             dangling = [t for t in toks if t not in ids and _sig(t) in id_sigs]
             if dangling:
@@ -315,6 +347,7 @@ def run_checks(P, fmt, schema=None, doc=None):
             if build and on in adj:
                 adj[on].append(sid)
     color, cyc = {s: 0 for s in P["ids"]}, []
+    sys.setrecursionlimit(max(1000, len(P["ids"]) * 10 + 100))  # guard for large plans (cap ~1000 steps)
 
     def dfs(u, stack):
         color[u] = 1
@@ -373,7 +406,29 @@ def run_checks(P, fmt, schema=None, doc=None):
             if c not in ids:
                 bad_led.append(f"'{ob[:30]}'->{c} (not a step)")
     chk("8", "ledger-step-closure", not bad_led, "; ".join(bad_led[:12]))
-    R.append(("8*", "requirements->ledger closure NOT verified (no requirements input)", "ADVISORY"))
+
+    # 8c requirements -> ledger closure. BLOCKING when the obligation set is available (emit populates
+    # plan_meta-adjacent `requirement_preservation.input_obligations`, or pass --requirements). This
+    # gives coverage a mechanical backstop equal to the structural checks instead of trusting the
+    # authoring LLM's self-certified coverage_verdict.
+    req_obl = P.get("req_obligations")
+    if req_obl:
+        ledger_obls = {ob for ob, _ in P["ledger"]}
+        uncovered = [o for o in req_obl if o not in ledger_obls]
+        chk("8c", "requirements-ledger-closure", not uncovered,
+            "obligations absent from the requirement ledger: " + ", ".join(uncovered[:12]))
+    else:
+        R.append(("8c", "requirements-ledger-closure NOT verified "
+                  "(no requirement_preservation.input_obligations / --requirements)", "ADVISORY"))
+
+    # harness-forge: the coverage_audit harness-first ordering check needs per-step obligation_class /
+    # target_subsystem tags (N-emit.md). Surface (advisory) whether they were carried so an inert
+    # harness-first check is visible rather than silently skipped.
+    if P.get("target_profile") == "harness-forge":
+        tagged = any((s.get("obligation_class") or s.get("target_subsystem")) for s in P.get("steps", []))
+        R.append(("hf", "harness-forge tags " + ("PRESENT (harness-first mechanically traceable)"
+                  if tagged else "ABSENT (harness-first NOT mechanically checkable — assert in prose)"),
+                  "ADVISORY"))
 
     # 7 test-without-implementation — HEURISTIC, ADVISORY ONLY (never blocks; runs both formats)
     tw = []
@@ -401,6 +456,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Mechanical structural gate for epiphany-plan plans.")
     ap.add_argument("plan")
     ap.add_argument("--schema", default=None)
+    ap.add_argument("--requirements", default=None,
+                    help="path to a JSON array of obligation ids (or a coverage doc with "
+                         "requirement_preservation.input_obligations) — enables the BLOCKING "
+                         "requirements->ledger closure check (8c) for plans that don't embed it.")
     ap.add_argument("--json-report", action="store_true")
     a = ap.parse_args(argv)
 
@@ -423,6 +482,16 @@ def main(argv=None):
             schema = json.load(open(spath))
     else:
         P = load_md_plan(text)
+
+    if a.requirements and os.path.exists(a.requirements):
+        try:
+            rq = json.load(open(a.requirements, encoding="utf-8"))
+            if isinstance(rq, dict):
+                rq = (rq.get("requirement_preservation") or {}).get("input_obligations") or rq.get("input_obligations")
+            if isinstance(rq, list):
+                P["req_obligations"] = [str(o) for o in rq]
+        except Exception as e:  # noqa
+            print(f"warning: could not read --requirements {a.requirements}: {e}", file=sys.stderr)
 
     results, violations = run_checks(P, fmt, schema=schema, doc=doc)
     passed = not violations

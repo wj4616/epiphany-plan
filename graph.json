@@ -15,7 +15,7 @@
       "inputs": [
         {
           "name": "spec_path",
-          "required": false,
+          "required": true,
           "signal_field": "spec_path"
         }
       ],

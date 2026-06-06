@@ -212,7 +212,7 @@ epiphany-plan/
   tools/                # shipped helper scripts the reasoning nodes invoke
     plan_verify.py      # the mechanical structural gate plan_verify runs (binding verdict)
     render_markdown.py  # deterministic JSON→Markdown parity renderer (for emitting BOTH formats)
-  tests/                # 42 tests (json schema + markdown structure + planning back-compat)
+  tests/                # 55 tests (json schema + markdown structure + planning back-compat + plan_verify/render_markdown tools)
 ```
 
 Worked example plans (real `epiphany-plan` Markdown output) live in

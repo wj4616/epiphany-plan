@@ -48,7 +48,16 @@ as binding:
 ```
 python3 <skill_path>/tools/plan_verify.py <out_path>          # JSON: schema-validate + checks 1-10; MD: structure + graph checks
 python3 <skill_path>/tools/plan_verify.py <out_path> --json-report
+python3 <skill_path>/tools/plan_verify.py <out_path> --requirements <obligations.json>   # enable the BLOCKING coverage-closure check (8c)
 ```
+
+**Coverage closure (check 8c).** When the emitted plan carries
+`requirement_preservation.input_obligations` (emit SHOULD populate it — the full obligation set from
+`ingest`), or you pass `--requirements`, the checker runs a **blocking** requirements→ledger closure:
+every obligation must appear in `requirement_ledger` with a non-empty `covered_by`. This is the
+mechanical backstop for *coverage* (mirroring what this gate already does for *structure*); absent the
+obligation set it degrades to advisory and coverage rests on the authoring node's `coverage_verdict`
+alone. Also note check 1 now FAILs any step lacking `traces_requirements`/`traces_to`.
 
 It exits non-zero and enumerates violations on FAIL. Your `structural_verdict` MUST agree with it; if
 the tool FAILs, this node FAILs and fires the back-edge to `integrate`. Run it on whichever format(s)
