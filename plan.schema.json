@@ -3,26 +3,59 @@
   "title": "epiphany-plan plan_document schema",
   "description": "The typed contract for the artifact epiphany-plan emits and epiphany-executor consumes. emit renders to this schema; plan_verify validates against it; write_plan persists it. Both planner and executor bind to this one file.",
   "type": "object",
-  "required": ["plan_meta", "steps"],
+  "required": [
+    "plan_meta",
+    "steps"
+  ],
   "additionalProperties": true,
   "properties": {
     "plan_meta": {
       "type": "object",
-      "required": ["plan_id", "schema", "source_spec"],
+      "required": [
+        "plan_id",
+        "schema",
+        "source_spec"
+      ],
       "properties": {
-        "plan_id": {"type": "string", "description": "unique identifier for this plan"},
-        "schema": {"type": "string", "description": "plan_document schema version, e.g. epiphany-plan.plan_document.v1"},
-        "source_spec": {"type": "string", "description": "path or reference to the source specification"},
-        "title": {"type": "string", "description": "human-readable plan title"},
-        "dual_mode": {"type": "boolean", "description": "whether the plan can be rendered in both Markdown and JSON"},
+        "plan_id": {
+          "type": "string",
+          "description": "unique identifier for this plan"
+        },
+        "schema": {
+          "type": "string",
+          "description": "plan_document schema version, e.g. epiphany-plan.plan_document.v1"
+        },
+        "source_spec": {
+          "type": "string",
+          "description": "path or reference to the source specification"
+        },
+        "title": {
+          "type": "string",
+          "description": "human-readable plan title"
+        },
+        "dual_mode": {
+          "type": "boolean",
+          "description": "whether the plan can be rendered in both Markdown and JSON"
+        },
         "consumers": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "list of downstream skill/executor names that consume this plan"
         },
-        "generated_by": {"type": "string", "description": "skill version and mode that generated this plan"},
-        "source_spec_version": {"type": "string", "description": "version of the source specification"},
-        "baseline": {"type": "string", "description": "prior version/baseline this plan is based on"},
+        "generated_by": {
+          "type": "string",
+          "description": "skill version and mode that generated this plan"
+        },
+        "source_spec_version": {
+          "type": "string",
+          "description": "version of the source specification"
+        },
+        "baseline": {
+          "type": "string",
+          "description": "prior version/baseline this plan is based on"
+        },
         "phasing": {
           "type": "object",
           "description": "high-level phase breakdown and milestones",
@@ -30,21 +63,28 @@
         },
         "global_invariants": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "architectural invariants that must hold across all steps"
         },
         "execution_notes": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "notes for operators about execution semantics, dependencies, integration_checks"
         },
         "target_profile": {
-          "enum": ["generic", "harness-forge"],
-          "description": "additive, default 'generic'; 'harness-forge' when the plan targets a goatcs/epiphany-harness skill (see ~/docs/epiphany/harness-forge-pipeline-integration.md). Absent ⇒ generic; changes nothing for ordinary plans."
+          "enum": [
+            "generic",
+            "harness-forge"
+          ],
+          "description": "additive, default 'generic'; 'harness-forge' when the plan targets a goatcs/epiphany-harness skill (see ~/docs/epiphany/harness-forge-pipeline-integration.md). Absent \u21d2 generic; changes nothing for ordinary plans."
         },
         "harness_forge": {
           "type": "object",
-          "description": "optional context-pack forwarded to epiphany-executor when target_profile == 'harness-forge'; mirrors the upstream §17 harness_forge_context. Omitted for generic plans.",
+          "description": "optional context-pack forwarded to epiphany-executor when target_profile == 'harness-forge'; mirrors the upstream \u00a717 harness_forge_context. Omitted for generic plans.",
           "additionalProperties": true
         }
       },
@@ -52,15 +92,34 @@
     },
     "coverage_verdict": {
       "type": "object",
-      "required": ["decision"],
+      "required": [
+        "decision"
+      ],
       "properties": {
-        "decision": {"enum": ["PASS", "FAIL"], "description": "whether requirement coverage is complete"},
-        "audit_revision": {"type": "string", "description": "audit round or revision identifier"},
-        "rationale": {"type": "string", "description": "explanation of coverage decision"},
-        "blocking": {"type": "boolean", "description": "whether this gate is blocking (halts execution if FAIL)"},
+        "decision": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ],
+          "description": "whether requirement coverage is complete"
+        },
+        "audit_revision": {
+          "type": "string",
+          "description": "audit round or revision identifier"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "explanation of coverage decision"
+        },
+        "blocking": {
+          "type": "boolean",
+          "description": "whether this gate is blocking (halts execution if FAIL)"
+        },
         "open_assumptions": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "list of explicit assumptions baked into the coverage decision"
         }
       },
@@ -69,15 +128,28 @@
     "structural_verdict": {
       "type": "object",
       "description": "plan_verify's gate result; present once the structural gate has run",
-      "required": ["decision"],
+      "required": [
+        "decision"
+      ],
       "properties": {
-        "decision": {"enum": ["PASS", "FAIL"], "description": "whether the plan structure is valid"},
+        "decision": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ],
+          "description": "whether the plan structure is valid"
+        },
         "checks": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "list of structural checks that were applied"
         },
-        "blocking": {"type": "boolean", "description": "whether this gate is blocking"}
+        "blocking": {
+          "type": "boolean",
+          "description": "whether this gate is blocking"
+        }
       },
       "additionalProperties": true
     },
@@ -85,19 +157,35 @@
       "type": "object",
       "description": "aggregated plan-level gate status (coverage + structural verdicts mapped to gates)",
       "properties": {
-        "coverage_verdict": {"enum": ["PASS", "FAIL"], "description": "outcome of coverage audit"},
-        "structural_verdict": {"enum": ["PASS", "FAIL"], "description": "outcome of structural gate"}
+        "coverage_verdict": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ],
+          "description": "outcome of coverage audit"
+        },
+        "structural_verdict": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ],
+          "description": "outcome of structural gate"
+        }
       },
       "additionalProperties": true
     },
     "blocking_defects": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "plan-level defects that block execution (e.g., unmet prerequisites, missing acceptance criteria)"
     },
     "structural_faults": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "plan-level structural issues that prevent valid execution (e.g., circular deps, missing step, undefined obligation)"
     },
     "requirement_preservation": {
@@ -106,8 +194,10 @@
       "properties": {
         "input_obligations": {
           "type": "array",
-          "items": {"type": "string"},
-          "description": "the complete obligation set ingest extracted (requirement/constraint/section ids). emit SHOULD populate this; tools/plan_verify.py reads it to run the BLOCKING requirements->ledger closure check (8c) — i.e. every obligation must appear in requirement_ledger with a non-empty covered_by. Absent => 8c is advisory-only."
+          "items": {
+            "type": "string"
+          },
+          "description": "the complete obligation set ingest extracted (requirement/constraint/section ids). emit SHOULD populate this; tools/plan_verify.py reads it to run the BLOCKING requirements->ledger closure check (8c) \u2014 i.e. every obligation must appear in requirement_ledger with a non-empty covered_by. Absent => 8c is advisory-only."
         }
       },
       "additionalProperties": true
@@ -116,12 +206,20 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["obligation", "covered_by"],
+        "required": [
+          "obligation",
+          "covered_by"
+        ],
         "properties": {
-          "obligation": {"type": "string", "description": "requirement/acceptance criterion identifier"},
+          "obligation": {
+            "type": "string",
+            "description": "requirement/acceptance criterion identifier"
+          },
           "covered_by": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "minItems": 1,
             "description": "list of step_ids that collectively discharge this obligation"
           }
@@ -132,22 +230,30 @@
     },
     "out_of_scope": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "explicit non-goals and exclusions from the plan scope"
     },
     "roots": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "true DAG sources (steps with no dependencies)"
     },
     "leaves": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "true DAG sinks (steps with no dependents)"
     },
     "terminal_milestones": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "semantic release tail; NOT required to equal leaves"
     },
     "graph_notes": {
@@ -156,17 +262,23 @@
     },
     "refinement_back_edges": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "plan-level back-edges for refinement (named dependents to re-verify on spec change)"
     },
     "execution_order": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "a topological sort of steps (implementation-prerequisite ordering; NOT runtime data flow)"
     },
     "build_order": {
       "type": "array",
-      "items": {"type": "string"},
+      "items": {
+        "type": "string"
+      },
       "description": "ordered list of step_ids for execution (alias for execution_order)"
     },
     "audit_log": {
@@ -174,11 +286,31 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": "string", "description": "audit finding identifier"},
-          "severity": {"enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"], "description": "finding severity"},
-          "class": {"type": "string", "description": "category of the finding"},
-          "finding": {"type": "string", "description": "description of the issue"},
-          "fix": {"type": "string", "description": "how the issue was resolved"}
+          "id": {
+            "type": "string",
+            "description": "audit finding identifier"
+          },
+          "severity": {
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ],
+            "description": "finding severity"
+          },
+          "class": {
+            "type": "string",
+            "description": "category of the finding"
+          },
+          "finding": {
+            "type": "string",
+            "description": "description of the issue"
+          },
+          "fix": {
+            "type": "string",
+            "description": "how the issue was resolved"
+          }
         },
         "additionalProperties": true
       },
@@ -189,42 +321,85 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["step_id", "goal", "actions", "acceptance_criteria"],
+        "required": [
+          "step_id",
+          "goal",
+          "actions",
+          "acceptance_criteria"
+        ],
         "additionalProperties": true,
         "properties": {
-          "step_id": {"type": "string", "description": "unique step identifier within the plan"},
-          "phase": {"type": "string", "description": "phase identifier (A, B, C, etc.) for phased execution"},
-          "goal": {"type": "string", "minLength": 1, "description": "high-level objective of this step"},
+          "step_id": {
+            "type": "string",
+            "description": "unique step identifier within the plan"
+          },
+          "phase": {
+            "type": "string",
+            "description": "phase identifier (A, B, C, etc.) for phased execution"
+          },
+          "goal": {
+            "type": "string",
+            "minLength": 1,
+            "description": "high-level objective of this step"
+          },
           "actions": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "minItems": 1,
             "description": "list of concrete actions to implement this step"
           },
           "inputs": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "description": "inputs required from prior steps or external sources"
           },
           "outputs": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "description": "outputs/artifacts produced by this step"
           },
           "dependencies": {
             "type": "array",
             "items": {
               "oneOf": [
-                {"type": "string", "description": "simple bare step_id string (legacy/tolerant)"},
+                {
+                  "type": "string",
+                  "description": "simple bare step_id string (legacy/tolerant)"
+                },
                 {
                   "type": "object",
-                  "required": ["on", "kind"],
+                  "required": [
+                    "on",
+                    "kind"
+                  ],
                   "properties": {
-                    "on": {"type": "string", "description": "step_id this step depends on"},
-                    "kind": {"enum": ["data", "ordering", "integration"], "description": "type of dependency"},
+                    "on": {
+                      "type": "string",
+                      "description": "step_id this step depends on"
+                    },
+                    "kind": {
+                      "enum": [
+                        "data",
+                        "ordering",
+                        "integration"
+                      ],
+                      "description": "type of dependency"
+                    },
                     "edge_class": {
-                      "enum": ["implementation-prerequisite", "runtime-data", "ordering", "concurrency-prerequisite", "feedback-input"],
-                      "description": "implementation-prerequisite = build X before Y; runtime-data = X's runtime output feeds Y; ordering = must follow, no data passes; concurrency-prerequisite = X must complete before a parallel/fan-out region Y may fire; feedback-input = X's output feeds a feedback/refinement loop Y (additive, generic — not domain-specific)"
+                      "enum": [
+                        "implementation-prerequisite",
+                        "runtime-data",
+                        "ordering",
+                        "concurrency-prerequisite",
+                        "feedback-input"
+                      ],
+                      "description": "implementation-prerequisite = build X before Y; runtime-data = X's runtime output feeds Y; ordering = must follow, no data passes; concurrency-prerequisite = X must complete before a parallel/fan-out region Y may fire; feedback-input = X's output feeds a feedback/refinement loop Y (additive, generic \u2014 not domain-specific)"
                     }
                   },
                   "additionalProperties": true
@@ -239,27 +414,50 @@
                 "type": "array",
                 "items": {
                   "oneOf": [
-                    {"type": "string", "description": "bare assertion string (tolerant form)"},
+                    {
+                      "type": "string",
+                      "description": "bare assertion string (tolerant form)"
+                    },
                     {
                       "type": "object",
-                      "required": ["assert"],
+                      "required": [
+                        "assert"
+                      ],
                       "properties": {
-                        "id": {"type": "string", "description": "check identifier"},
-                        "assert": {"type": "string", "description": "assertion over prior step outputs"},
-                        "status": {"type": "string", "description": "check status (PENDING, PASS, FAIL, DEFECT, ...). A status matching ^DEFECT raises a BLOCKING defect in epiphany-executor's start gate."}
+                        "id": {
+                          "type": "string",
+                          "description": "check identifier"
+                        },
+                        "assert": {
+                          "type": "string",
+                          "description": "assertion over prior step outputs"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "check status (PENDING, PASS, FAIL, DEFECT, ...). A status matching ^DEFECT raises a BLOCKING defect in epiphany-executor's start gate."
+                        }
                       },
                       "additionalProperties": true
                     }
                   ]
                 },
-                "description": "array of checks — each a bare string OR a typed {id, assert, status} object. The typed form lets epiphany-executor's DoD/gate + background ledger-sentinel track per-check status (PENDING->PASS/DEFECT)."
+                "description": "array of checks \u2014 each a bare string OR a typed {id, assert, status} object. The typed form lets epiphany-executor's DoD/gate + background ledger-sentinel track per-check status (PENDING->PASS/DEFECT)."
               },
               {
                 "type": "object",
                 "properties": {
-                  "id": {"type": "string", "description": "check identifier"},
-                  "assert": {"type": "string", "description": "assertion over prior step outputs"},
-                  "status": {"type": "string", "description": "check status (PASS, FAIL, DEFECT, etc.)"}
+                  "id": {
+                    "type": "string",
+                    "description": "check identifier"
+                  },
+                  "assert": {
+                    "type": "string",
+                    "description": "assertion over prior step outputs"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "check status (PASS, FAIL, DEFECT, etc.)"
+                  }
                 },
                 "additionalProperties": true
               }
@@ -268,28 +466,146 @@
           },
           "refinement_back_edges": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "description": "named dependents to re-verify if this step changes"
           },
           "acceptance_criteria": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "minItems": 1,
             "description": "testable gate; executor must not mark done until all pass"
           },
           "traces_to": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "description": "requirement IDs this step traces to (used in Markdown output)"
           },
           "traces_requirements": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+              "type": "string"
+            },
             "description": "requirement IDs this step traces to (alias for traces_to in schema)"
           }
         }
       },
       "description": "list of implementation steps comprising the plan. NOTE: the schema is intentionally tolerant (traces_to / traces_requirements are not in `required` so legacy/partial plans validate), but per N-emit.md + the spec OUTPUT CONTRACT every step MUST carry at least one of traces_to / traces_requirements; tools/plan_verify.py enforces this in check 1 (a traceless step FAILs the gate even though it validates against this schema)."
+    },
+    "wiring_contract": {
+      "type": "array",
+      "description": "OPTIONAL wiring-contract (harness-skill builds only): one row per skill capability \u2014 the integration DoD carried verbatim from the spec. Row shape mirrors goatcs_harness/wiring/contract.py (Phase-1 \u00a72). Absent => behaves as today; plan_verify C11 checks the row<->capability-step bijection only when present.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "requirement",
+          "mechanism",
+          "sites",
+          "fired_marker"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requirement": {
+            "type": "string"
+          },
+          "traces": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mechanism": {
+            "type": "string",
+            "enum": [
+              "tool_call",
+              "node_body",
+              "cli_orchestration",
+              "driver_dispatch",
+              "prose-only"
+            ]
+          },
+          "sites": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object"
+            }
+          },
+          "fired_marker": {
+            "description": "deterministic-machinery marker; object OR list (composite).",
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "ledger_tool",
+                      "cli_effect",
+                      "driver_signal",
+                      "node_exec"
+                    ]
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "ledger_tool",
+                        "cli_effect",
+                        "driver_signal",
+                        "node_exec"
+                      ]
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "smoke_input": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "force": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scripted_probe": {}
+        },
+        "additionalProperties": true
+      }
     }
   }
 }

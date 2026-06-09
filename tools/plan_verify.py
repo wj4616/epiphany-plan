@@ -448,6 +448,44 @@ def run_checks(P, fmt, schema=None, doc=None):
     chk("9", "coverage-verdict-honored", P["coverage_pass"],
         "coverage_verdict.decision=FAIL but plan emitted as ready")
 
+    # 11 wiring-contract bijection (additive; BLOCKING only when a wiring_contract is present).
+    # The integration DoD carried from the spec (wiring-check Phase 2 §5): every contract row maps
+    # to a capability step, and every SKILL capability-closure step maps to a row. Absent contract
+    # => N/A (back-compat: ordinary plans are byte-identical). Harness primitives (target_subsystem
+    # == harness) are EXEMPT from the reverse direction (gotcha #4: they are wired by construction).
+    wc = (doc or {}).get("wiring_contract") if fmt == "json" else None
+    if wc:
+        row_ids = [r.get("id") for r in wc if isinstance(r, dict) and r.get("id")]
+
+        def _refs(step):
+            toks = set()
+            for k in ("traces_requirements", "traces_to", "wiring_row", "wiring_rows", "wiring_contract_id"):
+                v = step.get(k)
+                if isinstance(v, str):
+                    toks.add(v)
+                elif isinstance(v, list):
+                    toks |= {str(x) for x in v}
+            return toks
+
+        steps = P.get("steps", [])
+        referenced = set()
+        for s in steps:
+            referenced |= _refs(s)
+        uncovered_rows = [rid for rid in row_ids if rid not in referenced]
+        chk("11", "wiring-bijection(row->step)", not uncovered_rows,
+            "wiring_contract rows referenced by no step (a declared capability with no plan step): "
+            + ", ".join(uncovered_rows[:12]))
+
+        rowset = set(row_ids)
+        unbound = []
+        for s in steps:
+            if (str(s.get("obligation_class", "")) == "capability-closure"
+                    and str(s.get("target_subsystem", "")).lower() == "skill"):
+                if not (_refs(s) & rowset):
+                    unbound.append(s.get("step_id", "?"))
+        chk("11b", "wiring-bijection(skill-step->row)", not unbound,
+            "skill capability-closure steps with no wiring_contract row: " + ", ".join(unbound[:12]))
+
     return R, V
 
 

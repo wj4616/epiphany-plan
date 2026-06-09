@@ -55,6 +55,13 @@ You are an ANALYZER. Your sole job is to parse the input specification document 
    - Else `target_profile: generic` (the default — ordinary planning, nothing changes).
    - **When uncertain → `generic` and abstain.** Never fabricate the profile or invent gaps/cells to
      unlock behavior (INV-1). This only enriches the downstream plan; it never gates anything.
+8. **Carry the wiring-contract (additive; harness-forge only).** If the spec's
+   `harness_forge_context` carries a `wiring_contract_rows` (or `wiring_contract`) list — the
+   integration DoD authored by epiphany-spec (one row per skill capability: `id`, `requirement`,
+   `traces`, `mechanism`, `sites`, `fired_marker`, `smoke_input`; see wiring-check §2) — emit it
+   VERBATIM as a `wiring_contract` register so `emit` can carry it into `plan.json` top-level and
+   `plan_verify` can check the row↔capability-step bijection. Do not synthesize or edit rows; copy
+   them as-authored. Absent ⇒ omit (ordinary plans are unaffected).
 
 ## Failure modes (avoid)
 - **Summarizing away detail** — folding distinct requirements into a single high-level statement. Every atomic obligation must survive as its own item.
