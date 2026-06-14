@@ -89,6 +89,31 @@ executor's DoD/gate + background ledger-sentinel to *track* a check's state, emi
 matches `^DEFECT` raises a BLOCKING defect at the start gate — so typed checks are the channel by
 which a regressed integration check can halt the executor. Bare strings cannot carry status.
 
+## Operator waivers (additive; harness-forge only; default-off)
+
+When the run seed carries operator `--waiver facet=reason` pairs (signal
+`waived_facets_pairs`, set from the `--waiver` flag — see SKILL.md SEED CONTRACT),
+do NOT hand-write the waiver into the plan (APU-018: baked code, not agent
+discretion). After emitting the **canonical JSON**, bake each audited waiver in with
+the shipped tool so `plan_verify` check 12 honors it via the SAME
+`waived_facets` / per-facet `waiver_reason` path it already reads:
+
+```
+python3 <skill_path>/tools/inject_waiver.py <plan.json> \
+  --waiver <facet>=<reason> [--waiver ...] \
+  [--solution-dir <workspace>] --in-place
+```
+
+This flips each `harness_ledger[facet]` to `status: waived` + records
+`waiver_reason`, adds the facet to top-level `waived_facets`, appends an audit
+entry to `plan_meta.waivers`, and (with `--solution-dir`) mirrors the audited
+record into the shared manifest via the resolver's `record_waiver()`. An unknown
+facet name is **rejected** (non-zero exit) — never silently accepted. When the
+plan is `generic` or no `--waiver` is given, the tool is a **no-op** and the plan
+is byte-identical (INV-1). Run `inject_waiver.py` BEFORE `plan_verify`, and (when
+emitting both formats) re-render the Markdown from the waiver-baked JSON so the
+two stay in parity.
+
 ## Markdown rendering (default)
 
 Render this structure exactly, so the document is both readable and reliably parseable. Use the literal section headings and the bold field labels below; one `###` block per step.

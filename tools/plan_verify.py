@@ -486,7 +486,78 @@ def run_checks(P, fmt, schema=None, doc=None):
         chk("11b", "wiring-bijection(skill-step->row)", not unbound,
             "skill capability-closure steps with no wiring_contract row: " + ", ".join(unbound[:12]))
 
+    # 12 harness-ledger facet coverage (S7 / WC-9 / APU-011). BLOCKING, harness-forge only.
+    # Every harness_ledger facet that is not waived must be covered by >=1 build step. A facet is
+    # "covered" when a step names it via covers_facets / facets, OR (fallback) any step's prose
+    # explicitly mentions the facet. Waived facets (status==waived or in a `waived_facets` set) are
+    # exempt — the waiver is the audited reason it has no covering step (INV-6). Absent a
+    # harness_ledger this check is N/A, so generic and non-harness plans are byte-identical (INV-1).
+    if fmt == "json":
+        ledger, waived = _harness_ledger(doc, P)
+        if ledger:
+            covered = _facets_covered_by_steps(P["steps"], P.get("raw_steps", {}))
+            uncovered = [f for f, status in ledger.items()
+                         if status != "waived" and f not in waived and f not in covered]
+            chk("12", "harness-ledger-facet-coverage", not uncovered,
+                "harness facets with no covering build step (add a step or --waiver): "
+                + ", ".join(sorted(uncovered)[:14]))
+            if waived:
+                R.append(("12w", "waived facets (audited, exempt from coverage): "
+                          + ", ".join(sorted(waived)), "ADVISORY"))
+
     return R, V
+
+
+def _harness_ledger(doc, P):
+    """Extract (facet->status, waived_set) from a plan doc, harness-forge only.
+
+    The ledger may live at top-level `harness_ledger`, or under
+    `plan_meta.harness_forge.harness_ledger`. Each value is either a status
+    string or a record dict with a `status`/`waiver_reason`. Returns ({}, set())
+    for generic plans so check 12 is a no-op (INV-1)."""
+    if P.get("target_profile") != "harness-forge":
+        return {}, set()
+    raw = doc.get("harness_ledger")
+    if raw is None:
+        hf = (doc.get("plan_meta") or {}).get("harness_forge") or {}
+        raw = hf.get("harness_ledger")
+    if not isinstance(raw, dict):
+        return {}, set()
+    ledger, waived = {}, set()
+    for facet, rec in raw.items():
+        if isinstance(rec, dict):
+            status = str(rec.get("status", "")).lower()
+            if rec.get("waiver_reason") or status == "waived":
+                waived.add(facet)
+            ledger[facet] = status or "missing"
+        else:
+            ledger[facet] = str(rec).lower()
+            if str(rec).lower() == "waived":
+                waived.add(facet)
+    # explicit waived list, if the planner chose to carry one
+    for f in (doc.get("waived_facets") or []):
+        if isinstance(f, str):
+            waived.add(f)
+    return ledger, waived
+
+
+def _facets_covered_by_steps(steps, raw_steps):
+    """The set of harness facets covered by >=1 step. A step covers a facet via an
+    explicit `covers_facets`/`facets` list, or by naming the facet token in its
+    goal/actions prose (e.g. 'facet:G' or 'Graph Architecture (G)')."""
+    covered = set()
+    for s in steps:
+        for key in ("covers_facets", "facets"):
+            v = s.get(key)
+            if isinstance(v, str):
+                covered.add(v)
+            elif isinstance(v, list):
+                covered |= {str(x) for x in v}
+        prose = " ".join([str(s.get("goal", ""))]
+                         + [str(a) for a in (s.get("actions") or [])])
+        for tok in re.findall(r"facet[:=]\s*([A-Za-z_]+)", prose):
+            covered.add(tok)
+    return covered
 
 
 # ----------------------------------------------------------------------------- main
