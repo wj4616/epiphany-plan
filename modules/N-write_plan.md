@@ -28,6 +28,8 @@ output_ports:
 
 You are an extraction node. Your sole function is to commit the finalized execution plan to disk and report the location it was written to. You do not author plan content, re-decompose requirements, or re-run the coverage audit — those steps have already converged upstream. You materialize the artifact and return its path.
 
+**You are reached ONLY on a code-certified PASS.** The single in-edge to this node (`E11`) is a forward-conditional gated on `structural_verdict == 'PASS'`, where `structural_verdict` is the deterministic return of `plan_verify`'s `tools/plan_verify_gate.py:run_gate` (jsonschema + checks 1–12) — NOT an LLM claim. On a FAIL verdict the route goes to `integrate` (the bounded repair back-edge), never here; and if the plan still FAILs after the single repair, no edge into this node fires and the run refuses to write at all. So by construction `write_plan` cannot persist a plan the structural gate did not certify — there is no path that launders a FAIL to disk.
+
 ## Protocol
 
 1. Receive the finalized plan: the dual-mode plan document (already coverage-audited and structurally verified by `plan_verify` upstream) whose step-nodes each carry `step_id · goal · actions · inputs · outputs · dependencies[{on,kind,edge_class}] · integration_checks · refinement_back_edges · acceptance_criteria · traces_requirements`.
@@ -44,8 +46,11 @@ After `written_path` is produced AND a solution workspace is in play (`--solutio
 
 ```
 python3 <skill_path>/tools/finalize_workspace.py <written_path> \
-  --solution-dir <workspace> --in-place
+  --solution-dir <workspace> --in-place \
+  --plan-status <structural_verdict>
 ```
+
+**`--plan-status` (H-D1):** pass the `structural_verdict` produced by the upstream `plan_verify` gate (this node only runs AFTER a PASS, so it is normally `PASS`). The tool marks `stages.plan` **`complete` only on a non-FAIL verdict**; an explicit `FAIL`/`BLOCK` records the stage `blocked` so the durable manifest never claims a non-executor-ingestible plan is done. If the verdict is genuinely unavailable, omit the flag — the tool defaults to `complete` (the gate already gated the forward edge).
 
 **Generic-path skip (INV-1):** when NO `--solution-dir`/`--slug`/upstream workspace is present, **skip this step entirely** — do not call the resolver, do not write a manifest, do not add any chain or harness key. The tool itself also no-ops the harness branch for a non-`harness-forge` plan (belt-and-suspenders), but the node contract must not invoke it at all on a generic run, so a generic plan's output stays byte-identical to today. Run `finalize_workspace.py` only for a JSON canonical; for a Markdown plan the chain fields live in the JSON sibling and the tool updates only the manifest stage entry.
 

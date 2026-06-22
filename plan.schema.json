@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "epiphany-plan plan_document schema",
-  "description": "The typed contract for the artifact epiphany-plan emits and epiphany-executor consumes. emit renders to this schema; plan_verify validates against it; write_plan persists it. Both planner and executor bind to this one file.",
+  "description": "The typed contract for the artifact epiphany-plan emits and epiphany-executor consumes. emit renders to this schema; plan_verify validates against it; write_plan persists it. Binding is asymmetric: the PLANNER side (plan_verify) validates against this schema, but the EXECUTOR importer (goatcs_harness/epiphany_plan_importer.py) binds via envelope/signature recognition — NOT this schema file — and is deliberately tolerant of two dialects: the schema-variant envelope (plan_meta + execution_order + coverage_verdict) AND the observed-emit triad (build_order + steps + gate_status). It also reads target_profile / harness_forge / schema_version top-level-OR-nested-under-plan_meta. Keep this schema and the importer's recognizer reconciled (INV-12 co-tuning channel); they are two views of 'valid plan', not one shared validator.",
   "type": "object",
   "required": [
     "plan_meta",

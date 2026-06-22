@@ -31,6 +31,8 @@ Topology class: **(derived at runtime)**. The graph has 10 node(s) and 12 edge(s
 
 Two blocking gates with bounded (1-firing) refinement back-edges to `integrate`: `coverage_audit` (requirement coverage) and `plan_verify` (structure + executor-readiness). Pipeline: `read_spec → ingest → decompose → {author_steps ∥ map_dependencies} → integrate → coverage_audit → emit → plan_verify → write_plan`.
 
+**`plan_verify` is CODE-ENFORCED (not an LLM self-grade).** It is a `no-llm` `impl` node whose `impl.target` is `tools/plan_verify_gate.py:run_gate` — the harness runs it deterministically (jsonschema.validate against `plan.schema.json` + `tools/plan_verify.py`'s checks 1–12) and binds the result to `structural_verdict` (a bare `PASS`/`FAIL` string). Routing branches on the code's verdict: `structural_verdict == 'PASS'` opens the forward edge to `write_plan`; `structural_verdict == 'FAIL'` opens the bounded back-edge to `integrate` (repair). After one failed repair, neither edge fires and the run refuses to write (fail-closed). This closes the false-PASS hole where a plan in a non-canonical dialect (schema-invalid JSON, `id` instead of `step_id`, dropped `plan_meta`) the executor importer can't ingest could ship a self-graded `plan_verify PASS`.
+
 ## SEED CONTRACT (entrypoint inputs)
 
 Provide these in the run seed / session state:

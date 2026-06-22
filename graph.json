@@ -212,6 +212,16 @@
           "name": "structural_verdict",
           "required": false,
           "signal_field": "structural_verdict"
+        },
+        {
+          "name": "violations",
+          "required": false,
+          "signal_field": "violations"
+        },
+        {
+          "name": "schema_valid",
+          "required": false,
+          "signal_field": "schema_valid"
         }
       ],
       "outputs": [
@@ -318,14 +328,19 @@
     "plan_verify": {
       "id": "plan_verify",
       "name": "plan_verify",
-      "type": "llm",
-      "tier": "model-medium",
+      "type": "io",
+      "tier": "no-llm",
       "exec_type": "inline",
       "hat": "",
       "inputs": [
         {
           "name": "plan_document",
           "signal_field": "plan_document"
+        },
+        {
+          "name": "written_path",
+          "required": false,
+          "signal_field": "written_path"
         },
         {
           "name": "integrated_plan",
@@ -345,6 +360,16 @@
         {
           "name": "structural_verdict",
           "signal_field": "structural_verdict"
+        },
+        {
+          "name": "schema_valid",
+          "required": false,
+          "signal_field": "schema_valid"
+        },
+        {
+          "name": "violations",
+          "required": false,
+          "signal_field": "violations"
         }
       ],
       "raises_signals": [],
@@ -358,7 +383,21 @@
       "conditional": false,
       "wave": null,
       "downshiftable": false,
-      "rationale": ""
+      "rationale": "CODE-ENFORCED structural gate (mirrors epiphany-brief N-COVERAGE). The verdict is the EXIT of tools/plan_verify_gate.py (jsonschema.validate against plan.schema.json + plan_verify.py checks 1-12), NOT an LLM self-grade. structural_verdict='PASS'|'FAIL' is a bare string so the edge DSL branches: PASS opens E11 -> write_plan; FAIL opens the bounded back-edge E12 -> integrate (repair). A non-canonical/schema-invalid plan can no longer ship a false PASS.",
+      "impl": {
+        "target": "tools.plan_verify_gate:run_gate",
+        "args": {
+          "plan_document": "plan_document",
+          "plan_path": "written_path",
+          "output_format": "output_format",
+          "requirements": "requirements"
+        },
+        "outputs": {
+          "structural_verdict": "structural_verdict",
+          "schema_valid": "schema_valid",
+          "violations": "violations"
+        }
+      }
     },
     "write_plan": {
       "id": "write_plan",
@@ -528,9 +567,9 @@
       "id": "E11",
       "src": "plan_verify",
       "dst": "write_plan",
-      "kind": "required",
+      "kind": "forward-conditional",
       "signal_field": null,
-      "gate_condition": null,
+      "gate_condition": "structural_verdict == 'PASS'",
       "retry_cap": null,
       "and_join_group": null,
       "split_from": null
@@ -541,7 +580,7 @@
       "dst": "integrate",
       "kind": "back-edge",
       "signal_field": null,
-      "gate_condition": null,
+      "gate_condition": "structural_verdict == 'FAIL'",
       "retry_cap": 1,
       "and_join_group": null,
       "split_from": null

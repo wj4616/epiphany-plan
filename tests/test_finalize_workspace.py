@@ -127,3 +127,33 @@ def test_upstream_resolves_same_workspace(tmp_path):
         json.dump(doc["plan_meta"], fh)   # carries solution_dir
     again = sw.resolve(upstream=handoff)
     assert os.path.abspath(again) == os.path.abspath(ws)
+
+
+def test_h_d1_fail_plan_marks_stage_blocked(tmp_path):
+    """H-D1: an explicit FAIL plan_verify verdict must NOT mark the manifest stage `complete`."""
+    ws = _mk_workspace(tmp_path, slug="t-hd1")
+    plan_file = os.path.join(sw.stage_subdir(ws, "plan"), "plan.json")
+    _write_plan(plan_file, harness=True)
+    res = _run(plan_file, ws, extra=["--plan-status", "FAIL"])
+    assert res.returncode == 0, res.stderr
+    man = sw.read_manifest(ws)
+    assert man["stages"]["plan"]["status"] == "blocked"
+
+    # ... and an explicit PASS (or no status) still completes (happy path unchanged).
+    res2 = _run(plan_file, ws, extra=["--plan-status", "PASS"])
+    assert res2.returncode == 0, res2.stderr
+    assert sw.read_manifest(ws)["stages"]["plan"]["status"] == "complete"
+
+
+def test_h_f2_string_ledger_normalized_to_records(tmp_path):
+    """H-F2: a {facet: 'full'} string-shaped ledger is coerced to canonical record dicts before
+    update_ledger, so the durable manifest never stores a bare-string ledger."""
+    ws = _mk_workspace(tmp_path, slug="t-hf2")
+    plan_file = os.path.join(sw.stage_subdir(ws, "plan"), "plan.json")
+    _write_plan(plan_file, harness=True, ledger={"G": "full", "W": "thin"})
+    res = _run(plan_file, ws)
+    assert res.returncode == 0, res.stderr
+    man = sw.read_manifest(ws)
+    led = man["harness_ledger"]
+    assert isinstance(led["G"], dict) and led["G"]["status"] == "full" and led["G"]["present"] is True
+    assert isinstance(led["W"], dict) and led["W"]["status"] == "thin"

@@ -334,8 +334,10 @@ def run_checks(P, fmt, schema=None, doc=None):
                 if build and on in pos and sid in pos and pos[on] >= pos[sid]:
                     viol.append(f"({sid} after-or-equal prereq {on})")
         miss = [s for s in P["ids"] if s not in pos]
+        # coerce to str: a step missing `step_id` (non-canonical dialect) yields a None id here;
+        # it is a real FAIL (check 1 also flags it), and must not crash the join.
         chk("3", "topo-order-consistency", not viol and not miss,
-            ("order: " + ", ".join(viol[:8])) + ("; not in order: " + ", ".join(miss[:8]) if miss else ""))
+            ("order: " + ", ".join(viol[:8])) + ("; not in order: " + ", ".join(str(s) for s in miss[:8]) if miss else ""))
     else:
         chk("3", "topo-order-consistency", False, "no execution_order/build_order found")
 
