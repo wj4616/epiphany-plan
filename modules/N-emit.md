@@ -199,6 +199,30 @@ Emit a single JSON object validating against `plan.schema.json`. Per-step object
 
 Populate the same envelope (`plan_meta` incl. `schema`/`source_spec`/`execution_notes`, `requirement_ledger`, `coverage_verdict`, carried `structural_verdict` when present, `execution_order`, `roots`, `leaves`, optional `terminal_milestones`). Code/command/config content lives in field string values as-is (JSON-escaped); never flatten it away. The output must parse as JSON and validate against `plan.schema.json`.
 
+### JSON field-type contract (validation gotchas — get these right the FIRST time)
+
+These are the exact types `plan.schema.json` enforces. They are easy to get wrong because the
+human-facing Markdown renders several of them as prose; in **JSON** they are typed. Emitting the
+prose form fails validation:
+
+- **`plan_meta.execution_notes`** — **`array` of strings**, NOT one prose string. Put each note as
+  its own array element (the Markdown `## Execution Notes` bullets each become one string).
+  ✅ `["Dependencies denote build order, not runtime flow", "..."]` · ❌ `"Dependencies denote ..."`
+- **`plan_meta.phasing`** (optional) — an **`object`** (map), NOT an array. Key by phase, e.g.
+  `{"phase_1": {"name": "...", "steps": ["S1","S2"]}}` · ❌ `[{"phase":1,...}]`
+- **`coverage_verdict`** — an **object** requiring **`decision`** ∈ `PASS|FAIL` (plus `blocking`,
+  `rationale`). A bare `"PASS"` string fails. (Same for a carried `structural_verdict`.)
+- **`requirement_ledger[]`** — each item requires **`obligation`** (the id) + **`covered_by`**
+  (non-empty array). The key is `obligation`, NOT `requirement`.
+- **`steps[].phase`** — a **string** (`"1"`, `"A"`), NOT an integer.
+- **NEVER hand-emit a top-level `gate_status`** — the executor importer synthesizes it from your
+  `coverage_verdict`/`structural_verdict` (see "Executor handshake" above). A hand-built one is
+  typed as an object and will both mis-trigger the importer and fail validation if stubbed as a string.
+
+Self-check before submitting: validate the document against `plan.schema.json` (e.g.
+`python3 -c "import json,jsonschema; jsonschema.validate(json.load(open(P)), json.load(open(S)))"`).
+`plan_verify` re-checks this downstream, but validating at emit avoids a wasted refinement cycle.
+
 ## Protocol (both formats)
 
 1. **Consume the integrated graph.** Take the merged step-nodes, dependency edges, integration checks, and the coverage-audit result. Treat the coverage audit as a precondition: if it has not asserted every requirement maps to ≥1 step, you have nothing valid to render.
